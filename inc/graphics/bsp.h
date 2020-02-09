@@ -7,7 +7,7 @@
 // Function declarations
 void BSP_GenerateOrderedLineSet
 (
-	POINT 	position,
+	POINT *	position,
 	NODE *	inputSet,
 	LINE *	outputSet
 );
