@@ -1,5 +1,5 @@
-#ifndef ERROR_H_
-#define ERROR_H_
+#ifndef IO_ERROR_H_
+#define IO_ERROR_H_
 
 // Defines
 #define RETURN_STATUS_OK		return (MESSAGE){ STATUS_OK, "" }

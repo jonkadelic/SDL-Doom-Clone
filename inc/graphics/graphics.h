@@ -1,5 +1,5 @@
-#ifndef GRAPHICS_H_
-#define GRAPHICS_H_
+#ifndef GRAPHICS_GRAPHICS_H_
+#define GRAPHICS_GRAPHICS_H_
 
 // Includes
 #include <SDL2/SDL.h>
@@ -25,9 +25,21 @@ MESSAGE Graphics_ShowErrorDialog
 	const char *	message
 );
 
-void Graphics_DrawMap
+void Graphics_StartFrameRender(void);
+
+void Graphics_EndFrameRender(void);
+
+void Graphics_SetDrawColor
 (
-	MAP	*	map
+	int r,
+	int g,
+	int b,
+	int a
+);
+
+void Graphics_DrawLine
+(
+	LINE *	line
 );
 
 #endif

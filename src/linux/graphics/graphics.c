@@ -1,9 +1,6 @@
 // Includes
 #include <graphics/graphics.h>
 
-// Defines
-#define MAP_DRAW_SCALE 100
-
 // Global variables
 static SDL_Window *		window = NULL;
 static SDL_Surface *	surface = NULL;
@@ -11,12 +8,6 @@ static SDL_Renderer *	renderer = NULL;
 
 static int screenWidth = 640;
 static int screenHeight = 480;
-
-// Function declarations
-void Graphics_DrawBSPNode
-(
-	NODE *	node
-);
 
 // Function definitions
 MESSAGE Graphics_Init
@@ -77,43 +68,38 @@ MESSAGE Graphics_ShowErrorDialog
 	RETURN_STATUS_OK;
 }
 
-void Graphics_DrawMap
-(
-	MAP	*	map
-)
+void Graphics_StartFrameRender(void)
 {
-	Graphics_DrawBSPNode(map->bspRoot);
 
+}
+
+void Graphics_EndFrameRender(void)
+{
 	SDL_RenderPresent(renderer);
 }
 
-void Graphics_DrawBSPNode
+void Graphics_SetDrawColor
 (
-	NODE *	node
+	int r,
+	int g,
+	int b,
+	int a
 )
 {
-	if (node->line.front == true)
-	{
-		SDL_SetRenderDrawColor(renderer, 0, 0, 255, SDL_ALPHA_OPAQUE);
-	}
-	else
-	{
-		SDL_SetRenderDrawColor(renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-	}
+	SDL_SetRenderDrawColor(renderer, r, g, b, a);
+}
 
-	SDL_RenderDrawLine(renderer,
-					   node->line.start.x * MAP_DRAW_SCALE,
-					   node->line.start.y * MAP_DRAW_SCALE,
-					   node->line.end.x * MAP_DRAW_SCALE,
-					   node->line.end.y * MAP_DRAW_SCALE
-					  );
-
-	if (node->left != NULL)
-	{
-		Graphics_DrawBSPNode(node->left);
-	}
-	if (node->right != NULL)
-	{
-		Graphics_DrawBSPNode(node->right);
-	}
+void Graphics_DrawLine
+(
+	LINE *	line
+)
+{
+		SDL_RenderDrawLine
+		(
+			renderer,
+			line->start.x,
+			line->start.y,
+			line->end.x,
+			line->end.y
+		);
 }

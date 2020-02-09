@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include <graphics/graphics.h>
+#include <graphics/map.h>
 #include <io/error.h>
 #include <io/map.h>
 

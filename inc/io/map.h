@@ -1,5 +1,5 @@
-#ifndef MAP_H_
-#define MAP_H_
+#ifndef IO_MAP_H_
+#define IO_MAP_H_
 
 // Includes
 #include <io/error.h>
