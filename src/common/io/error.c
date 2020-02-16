@@ -3,8 +3,7 @@
 #include <io/error.h>
 
 #include <stdio.h>
-#include <SDL2/SDL.h>
-#include <graphics/graphics.h>
+#include <stdlib.h>
 
 // Function definitions
 void Error_Handle(MESSAGE message)
@@ -21,7 +20,6 @@ void Error_Handle(MESSAGE message)
 			char titleBuffer[32];
 			snprintf(titleBuffer, sizeof(titleBuffer), "Failure in %s", message.source);
 
-			Graphics_ShowErrorDialog(titleBuffer, message.msg);
 			fprintf(stderr, "%s: %s\r\n", titleBuffer, message.msg);
 
 			exit(1);

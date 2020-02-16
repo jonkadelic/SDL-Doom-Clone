@@ -2,12 +2,15 @@
 #define GRAPHICS_MAP_H_
 
 // Includes
+#include <io/map.h>
 #include <graphics/graphics.h>
+#include <graphics/framebuffer.h>
 
 // Function declarations
 void Graphics_DrawMap
 (
-	MAP	*	map
+	FRAMEBUFFER_HANDLE *	handle,
+	MAP	*					map
 );
 
 #endif

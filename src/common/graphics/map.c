@@ -1,4 +1,5 @@
 // Includes
+#include <stddef.h>
 #include <graphics/map.h>
 #include <io/map.h>
 #include <graphics/graphics.h>
@@ -9,44 +10,46 @@
 // Function declarations
 void Graphics_DrawBSPNode
 (
-	NODE *	node
+	FRAMEBUFFER_HANDLE *	handle,
+	NODE *					node
 );
 
 // Function definitions
 void Graphics_DrawMap
 (
-	MAP	*	map
+	FRAMEBUFFER_HANDLE *	handle,
+	MAP	*					map
 )
 {
-	Graphics_StartFrameRender();
+	Graphics_DrawBSPNode(handle, map->bspRoot);
 
-	Graphics_DrawBSPNode(map->bspRoot);
-
-	Graphics_EndFrameRender();
+	Framebuffer_Blit(handle);
 }
 
 void Graphics_DrawBSPNode
 (
+	FRAMEBUFFER_HANDLE *	handle,
 	NODE *	node
 )
 {
+	uint32_t color;
 	if (node->wall.front == true)
 	{
-		Graphics_SetDrawColor(0, 0, 255, 255);
+		color = 0xFF0000FF;
 	}
 	else
 	{
-		Graphics_SetDrawColor(255, 0, 0, 255);
+		color = 0xFFFF0000;
 	}
 
-	Graphics_DrawLine(&(node->wall.start), &(node->wall.end));
+	Graphics_DrawLine(handle, &(node->wall.start), &(node->wall.end), color);
 
 	if (node->left != NULL)
 	{
-		Graphics_DrawBSPNode(node->left);
+		Graphics_DrawBSPNode(handle, node->left);
 	}
 	if (node->right != NULL)
 	{
-		Graphics_DrawBSPNode(node->right);
+		Graphics_DrawBSPNode(handle, node->right);
 	}
 }
