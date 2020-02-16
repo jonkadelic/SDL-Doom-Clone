@@ -94,12 +94,12 @@ void Graphics_DrawLine
 	LINE *	line
 )
 {
-		SDL_RenderDrawLine
-		(
-			renderer,
-			line->start.x,
-			line->start.y,
-			line->end.x,
-			line->end.y
-		);
+	SDL_RenderDrawLine
+	(
+		renderer,
+		line->start.x,
+		line->start.y,
+		line->end.x,
+		line->end.y
+	);
 }
