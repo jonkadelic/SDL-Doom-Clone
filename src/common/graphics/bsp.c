@@ -9,23 +9,23 @@ int setIndex = 0;
 // Function declarations
 void BSP_TraverseNodes
 (
-	NODE *	node,
-	LINE *	outputSet,
-	POINT *	point
+	NODE *		node,
+	MAP_WALL *	outputSet,
+	MAP_POINT *	point
 );
 
 bool BSP_IsPointInFrontOfNode
 (
-	NODE * node,
-	POINT * point
+	NODE * 		node,
+	MAP_POINT * point
 );
 
 // Function definitions
 void BSP_GenerateOrderedLineSet
 (
-	POINT *	position,
-	NODE *	inputSet,
-	LINE *	outputSet
+	MAP_POINT *	position,
+	NODE *		inputSet,
+	MAP_WALL *	outputSet
 )
 {
 	setIndex = 0;
@@ -35,14 +35,14 @@ void BSP_GenerateOrderedLineSet
 
 void BSP_TraverseNodes
 (
-	NODE *	node,
-	LINE *	outputSet,
-	POINT *	point
+	NODE *		node,
+	MAP_WALL *	outputSet,
+	MAP_POINT *	point
 )
 {
 	if (node->left == NULL && node->right == NULL)
 	{
-		outputSet[setIndex++] = node->line;
+		outputSet[setIndex++] = node->wall;
 	}
 	else
 	{
@@ -51,13 +51,13 @@ void BSP_TraverseNodes
 		if (pos == 1)
 		{
 			BSP_TraverseNodes(node->left, outputSet, point);
-			outputSet[setIndex++] = node->line;
+			outputSet[setIndex++] = node->wall;
 			BSP_TraverseNodes(node->right, outputSet, point);
 		}
 		else if (pos == -1)
 		{
 			BSP_TraverseNodes(node->right, outputSet, point);
-			outputSet[setIndex++] = node->line;
+			outputSet[setIndex++] = node->wall;
 			BSP_TraverseNodes(node->left, outputSet, point);
 		}
 		else
@@ -66,21 +66,20 @@ void BSP_TraverseNodes
 			BSP_TraverseNodes(node->left, outputSet, point);
 		}
 	}
-	
 }
 
 bool BSP_IsPointInFrontOfNode
 (
-	NODE * node,
-	POINT * point
+	NODE * 		node,
+	MAP_POINT * point
 )
 {
 	int x = point->x;
 	int y = point->y;
-	int x1 = node->line.start.x;
-	int x2 = node->line.end.x;
-	int y1 = node->line.start.y;
-	int y2 = node->line.end.y;
+	int x1 = node->wall.start.x;
+	int x2 = node->wall.end.x;
+	int y1 = node->wall.start.y;
+	int y2 = node->wall.end.y;
 
 	int out = ((x - x1) * (y2 - y1)) - ((y - y1) * (x2 - x1));
 
@@ -99,7 +98,7 @@ bool BSP_IsPointInFrontOfNode
 		pos = 0;
 	}
 
-	if (node->line.front == false)
+	if (node->wall.front == false)
 	{
 		pos = -pos;
 	}

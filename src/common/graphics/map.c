@@ -30,7 +30,7 @@ void Graphics_DrawBSPNode
 	NODE *	node
 )
 {
-	if (node->line.front == true)
+	if (node->wall.front == true)
 	{
 		Graphics_SetDrawColor(0, 0, 255, 255);
 	}
@@ -39,7 +39,7 @@ void Graphics_DrawBSPNode
 		Graphics_SetDrawColor(255, 0, 0, 255);
 	}
 
-	Graphics_DrawLine(&(node->line));
+	Graphics_DrawLine(&(node->wall.start), &(node->wall.end));
 
 	if (node->left != NULL)
 	{

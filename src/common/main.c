@@ -60,20 +60,20 @@ void BSP_PrintTree(NODE* node, int parent)
         printf("Node %d (parent %d) goes (X=%d, Y=%d) to (X=%d, Y=%d), no left, no right.\r\n",
                 me,
                 parent,
-                node->line.start.x,
-                node->line.start.y,
-                node->line.end.x,
-                node->line.end.y);
+                node->wall.start.x,
+                node->wall.start.y,
+                node->wall.end.x,
+                node->wall.end.y);
     }
     else if (node->left != NULL && node->right == NULL)
     {
         printf("Node %d (parent %d) goes (X=%d, Y=%d) to (X=%d, Y=%d), has left, no right.\r\n",
                 me,
                 parent,
-                node->line.start.x,
-                node->line.start.y,
-                node->line.end.x,
-                node->line.end.y);
+                node->wall.start.x,
+                node->wall.start.y,
+                node->wall.end.x,
+                node->wall.end.y);
         BSP_PrintTree(node->left, me);
     }
     else if (node->left == NULL && node->right != NULL)
@@ -81,10 +81,10 @@ void BSP_PrintTree(NODE* node, int parent)
         printf("Node %d (parent %d) goes (X=%d, Y=%d) to (X=%d, Y=%d), no left, has right.\r\n",
                 me,
                 parent,
-                node->line.start.x,
-                node->line.start.y,
-                node->line.end.x,
-                node->line.end.y);
+                node->wall.start.x,
+                node->wall.start.y,
+                node->wall.end.x,
+                node->wall.end.y);
         BSP_PrintTree(node->right, me);
     }
     else if (node->left != NULL && node->right != NULL)
@@ -92,10 +92,10 @@ void BSP_PrintTree(NODE* node, int parent)
         printf("Node %d (parent %d) goes (X=%d, Y=%d) to (X=%d, Y=%d), has left, has right.\r\n",
                 me,
                 parent,
-                node->line.start.x,
-                node->line.start.y,
-                node->line.end.x,
-                node->line.end.y);
+                node->wall.start.x,
+                node->wall.start.y,
+                node->wall.end.x,
+                node->wall.end.y);
         BSP_PrintTree(node->left, me);
         BSP_PrintTree(node->right, me);
     }

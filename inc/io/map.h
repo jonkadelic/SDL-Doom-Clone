@@ -10,7 +10,7 @@
 // Typedefs
 typedef struct node
 {
-	LINE			line;
+	MAP_WALL		wall;
 	struct node *	left;
 	struct node *	right;
 	int				id;

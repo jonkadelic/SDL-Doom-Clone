@@ -7,8 +7,8 @@
 // Typedefs
 typedef struct player
 {
-	POINT	position;
-	int		angle;
+	MAP_POINT	position;
+	int			angle;
 } PLAYER;
 
 // Global variables

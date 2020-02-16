@@ -52,11 +52,11 @@ MESSAGE Map_Load
 		else
 		{
 			nodeArray[id].id = id;
-			nodeArray[id].line.start.x = startx;
-			nodeArray[id].line.start.y = starty;
-			nodeArray[id].line.end.x = endx;
-			nodeArray[id].line.end.y = endy;
-			nodeArray[id].line.front = (bool)front;
+			nodeArray[id].wall.start.x = startx;
+			nodeArray[id].wall.start.y = starty;
+			nodeArray[id].wall.end.x = endx;
+			nodeArray[id].wall.end.y = endy;
+			nodeArray[id].wall.front = (bool)front;
 		}
 	}
 

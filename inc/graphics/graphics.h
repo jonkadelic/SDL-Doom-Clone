@@ -39,7 +39,8 @@ void Graphics_SetDrawColor
 
 void Graphics_DrawLine
 (
-	LINE *	line
+	RENDERER_POINT *	start,
+	RENDERER_POINT *	end
 );
 
 #endif

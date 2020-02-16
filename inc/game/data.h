@@ -5,17 +5,25 @@
 #include <stdbool.h>
 
 // Typedefs
-typedef struct point
+struct point
 {
 	int	x;
 	int	y;
-} POINT;
+};
+typedef struct point MAP_POINT;
+typedef struct point RENDERER_POINT;
 
-typedef struct line
+typedef struct map_wall
 {
-	POINT	start;
-	POINT	end;
-	bool	front;
-} LINE;
+	MAP_POINT	start;
+	MAP_POINT	end;
+	bool		front;
+} MAP_WALL;
+
+typedef struct polygon
+{
+	int					pointCount;
+	RENDERER_POINT *	points;
+} POLYGON;
 
 #endif
