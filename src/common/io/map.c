@@ -22,7 +22,7 @@ MESSAGE Map_Load
 	int		id, startx, starty, endx, endy, front;
 	int		leftid, rightid;
 
-	char	mapName[MAP_NAME_BUFFER_SIZE];
+	char	mapName[MAP_NAME_BUFFER_SIZE] = "";
 
 	NODE *	nodeArray;
 
@@ -36,6 +36,8 @@ MESSAGE Map_Load
 	{
 		THROW_ERROR(STATUS_FAILURE, "Map data is not valid!");
 	}
+
+	map->nodeCount = nodeCount;
 
 	nodeArray = malloc(sizeof(NODE) * nodeCount);
 	if (nodeArray == NULL)

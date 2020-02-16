@@ -119,7 +119,16 @@ void Framebuffer_Blit
 	SDL_RenderPresent(renderer);
 }
 
-void Framebuffer_Plot
+void Framebuffer_Clear
+(
+	const FRAMEBUFFER_HANDLE *	handle,
+	const uint32_t				argb
+)
+{
+	memset(handle->framebuffer, argb, handle->width * handle->height * sizeof(uint32_t));
+}
+
+void Framebuffer_SetPixel
 (
 	const FRAMEBUFFER_HANDLE *	handle,
 	const unsigned int			x,
@@ -133,4 +142,35 @@ void Framebuffer_Plot
 	}
 
 	handle->framebuffer[(y * handle->width) + x] = argb;
+}
+
+uint32_t Framebuffer_GetPixel
+(
+	const FRAMEBUFFER_HANDLE *	handle,
+	const unsigned int			x,
+	const unsigned int			y
+)
+{
+	if (x < 0 || x >= handle->width || y < 0 || y >= handle->height)
+	{
+		return 0;
+	}
+
+	return handle->framebuffer[(y * handle->width) + x];
+}
+
+int Framebuffer_GetWidth
+(
+	const FRAMEBUFFER_HANDLE *	handle
+)
+{
+	return handle->width;
+}
+
+int Framebuffer_GetHeight
+(
+	const FRAMEBUFFER_HANDLE *	handle
+)
+{
+	return handle->height;
 }

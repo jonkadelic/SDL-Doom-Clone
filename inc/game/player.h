@@ -4,14 +4,27 @@
 // Includes
 #include <game/data.h>
 
+// Defines
+#define PLAYER_HEIGHT	32
+#define PLAYER_FOV		900
+
 // Typedefs
 typedef struct player
 {
 	MAP_POINT	position;
 	int			angle;
+	int			height;
+	int			fov;
 } PLAYER;
 
 // Global variables
 extern PLAYER player;
+
+// Function declarations
+void Player_SetAngle
+(
+	PLAYER *	player,
+	int			angle
+);
 
 #endif

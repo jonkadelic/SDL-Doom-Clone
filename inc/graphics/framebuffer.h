@@ -28,12 +28,35 @@ void Framebuffer_Blit
 	const FRAMEBUFFER_HANDLE *	handle
 );
 
-void Framebuffer_Plot
+void Framebuffer_Clear
+(
+	const FRAMEBUFFER_HANDLE *	handle,
+	const uint32_t				argb
+);
+
+void Framebuffer_SetPixel
 (
 	const FRAMEBUFFER_HANDLE *	handle,
 	const unsigned int			x,
 	const unsigned int			y,
 	const uint32_t 				argb
+);
+
+uint32_t Framebuffer_GetPixel
+(
+	const FRAMEBUFFER_HANDLE *	handle,
+	const unsigned int			x,
+	const unsigned int			y
+);
+
+int Framebuffer_GetWidth
+(
+	const FRAMEBUFFER_HANDLE *	handle
+);
+
+int Framebuffer_GetHeight
+(
+	const FRAMEBUFFER_HANDLE *	handle
 );
 
 #endif

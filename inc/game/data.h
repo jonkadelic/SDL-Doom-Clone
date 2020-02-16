@@ -20,10 +20,10 @@ typedef struct map_wall
 	bool		front;
 } MAP_WALL;
 
-typedef struct polygon
+typedef struct renderer_polygon
 {
-	int					pointCount;
+	int					count;
 	RENDERER_POINT *	points;
-} POLYGON;
+} RENDERER_POLYGON;
 
 #endif

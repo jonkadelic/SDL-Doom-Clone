@@ -3,11 +3,13 @@
 
 // Includes
 #include <io/map.h>
+#include <graphics/framebuffer.h>
 
 // Function declarations
 void Graphics_RenderFirstPerson
 (
-	MAP *	map
+	FRAMEBUFFER_HANDLE *	handle,
+	MAP *					map
 );
 
 #endif

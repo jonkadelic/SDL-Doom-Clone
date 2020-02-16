@@ -14,4 +14,11 @@ void Graphics_DrawLine
 	uint32_t				argb
 );
 
+void Graphics_DrawFilledPolygon
+(
+	FRAMEBUFFER_HANDLE *	handle,
+	RENDERER_POLYGON *		polygon,
+	uint32_t				argb
+);
+
 #endif

@@ -19,6 +19,7 @@ typedef struct node
 typedef struct map
 {
 	NODE *	bspRoot;
+	int		nodeCount;
 	char *	mapName;
 } MAP;
 

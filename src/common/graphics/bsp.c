@@ -40,7 +40,11 @@ void BSP_TraverseNodes
 	MAP_POINT *	point
 )
 {
-	if (node->left == NULL && node->right == NULL)
+	if (node == NULL)
+	{
+		return;
+	}
+	else if (node->left == NULL && node->right == NULL)
 	{
 		outputSet[setIndex++] = node->wall;
 	}

@@ -4,6 +4,8 @@
 		"graphics.h": "c",
 		"*.tcc": "cpp",
 		"istream": "cpp",
-		"typeinfo": "cpp"
+		"typeinfo": "cpp",
+		"data.h": "c",
+		"map.h": "c"
 	}
 }
