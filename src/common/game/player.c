@@ -1,8 +1,7 @@
 // Includes
 #include <game/player.h>
 
-// Defines
-#define MAX_PLAYER_ANGLE	3600
+#include <game/angle.h>
 
 // Global variables
 PLAYER player;
@@ -11,8 +10,8 @@ PLAYER player;
 void Player_SetAngle
 (
 	PLAYER *	player,
-	int 		angle
+	DEGREES		angle
 )
 {
-	player->angle = angle % MAX_PLAYER_ANGLE;
+	player->angle = Angle_Normalise(angle);
 }

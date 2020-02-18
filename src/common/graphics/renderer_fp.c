@@ -11,7 +11,6 @@
 
 // Defines
 #define HEIGHT_SCALE	512.0
-#define M_PI			3.14159265358979323846
 
 // Function declarations
 void Graphics_RenderWall
@@ -48,7 +47,7 @@ void Graphics_RenderFirstPerson
 	// Get ordered list of walls
 	BSP_GenerateOrderedLineSet(&(player.position), map->bspRoot, wallSet);
 
-	for (i = 0; i < map->nodeCount; i++)
+	for (i = map->nodeCount - 1; i >= 0; i--)
 	{
 		Graphics_RenderWall(handle, &(wallSet[i]));
 	}
@@ -73,17 +72,17 @@ void Graphics_RenderWall
 	Graphics_GetPointX(handle, &(wall->start), &(startTop.x));
 	startBottom.x = startTop.x;
 	Graphics_GetPointTopBottom(handle, &(wall->end), &(endTop.y), &(endBottom.y));
-	Graphics_GetPointX(handle, &(wall->start), &(endTop.x));
+	Graphics_GetPointX(handle, &(wall->end), &(endTop.x));
 	endBottom.x = endTop.x;
 
 	polygon.points = malloc(4 * sizeof(RENDERER_POINT*));
 	polygon.count = 4;
 	polygon.points[0] = startTop;
 	polygon.points[1] = startBottom;
-	polygon.points[2] = endTop;
-	polygon.points[3] = endBottom;
+	polygon.points[2] = endBottom;
+	polygon.points[3] = endTop;
 
-	argb = 0xFF000000 | ((0x00FFFFFF & wall->start.x) ^ (0x00FFFFFF & wall->start.y) ^ (0x00FFFFFF & wall->end.x) ^ (0x00FFFFFF & wall->end.y));
+	argb = 0xFF000000 | ((0x00FFFFFF & wall->start.x) << 16) | ((0x00FFFFFF & wall->start.y) << 8) | ((0x00FFFFFF & wall->end.x));
 
 	Graphics_DrawFilledPolygon(handle, &polygon, argb);
 
@@ -119,20 +118,16 @@ void Graphics_GetPointX
 )
 {
 	int dx, dy;
-	int angle;
+	DEGREES halfFov = player.fov / 2;
+	DEGREES angle;
+	float f;
 
 	int fbMidX = Framebuffer_GetWidth(handle) / 2;
 
 	dx = point->x - player.position.x;
 	dy = point->y - player.position.y;
-	angle = (int)(atan2(dy, dx) * (180.0 / M_PI) * 10.0) + player.angle;
+	angle = Angle_Atan2(dy, dx) + player.angle;
 
-	if (angle == 0)
-	{
-		*x = fbMidX;
-	}
-	else 
-	{
-		*x = fbMidX + (player.fov / angle);
-	}
+	f = angle / halfFov;
+	*x = Framebuffer_GetWidth(handle) * f;
 }
