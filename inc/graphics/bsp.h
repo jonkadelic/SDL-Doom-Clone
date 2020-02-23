@@ -5,11 +5,11 @@
 #include <io/map.h>
 
 // Function declarations
-void BSP_GenerateOrderedLineSet
+int BSP_GenerateOrderedLineSet
 (
 	MAP_POINT *	position,
 	NODE *		inputSet,
-	MAP_WALL *	outputSet
+	NODE **		outputSet
 );
 
 #endif

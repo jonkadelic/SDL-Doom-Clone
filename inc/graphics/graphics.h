@@ -21,4 +21,16 @@ void Graphics_DrawFilledPolygon
 	uint32_t				argb
 );
 
+void Graphics_DrawWall
+(
+	FRAMEBUFFER_HANDLE *	handle,
+	int						aX,
+	int						aY1,
+	int						aY2,
+	int						bX,
+	int						bY1,
+	int						bY2,
+	uint32_t				argb
+);
+
 #endif

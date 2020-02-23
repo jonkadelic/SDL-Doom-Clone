@@ -6,7 +6,7 @@
 #include <graphics/framebuffer.h>
 
 // Function declarations
-void Graphics_RenderFirstPerson
+void Renderer_FirstPerson_Render
 (
 	FRAMEBUFFER_HANDLE *	handle,
 	MAP *					map

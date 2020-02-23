@@ -6,6 +6,9 @@
 		"istream": "cpp",
 		"typeinfo": "cpp",
 		"data.h": "c",
-		"map.h": "c"
+		"map.h": "c",
+		"bsp.h": "c",
+		"stddef.h": "c",
+		"player.h": "c"
 	}
 }

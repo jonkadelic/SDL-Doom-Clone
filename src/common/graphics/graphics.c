@@ -3,9 +3,19 @@
 
 #include <stdlib.h>
 
-// TEMPORARY
-#include <unistd.h>
+// Typedefs
+typedef struct line_data
+{
+	RENDERER_POINT current;
+	int dx;
+	int sx;
+	int dy;
+	int sy;
+	int err;
+	int e2;
+} LINE_DATA;
 
+// Function definitions
 void Graphics_DrawLine
 (
 	FRAMEBUFFER_HANDLE * 	handle,
@@ -14,36 +24,35 @@ void Graphics_DrawLine
 	uint32_t				argb
 )
 {
-	int x0 = start->x;
-	int y0 = start->y;
-	int x1 = end->x;
-	int y1 = end->y;
-
-	int dx = abs(x1 - x0);
-	int sx = x0 < x1 ? 1 : -1;
-	int dy = -abs(y1 - y0);
-	int sy = y0 < y1 ? 1 : -1;
-	int err = dx + dy;
+	LINE_DATA data =
+	{
+		.current = { start->x, start->y },
+		.dx = abs(end->x - start->x),
+		.sx = start->x < end->x ? 1 : -1,
+		.dy = -abs(end->y - start->y),
+		.sy = start->y < end->y ? 1 : -1
+	};
+	data.err = data.dx + data.dy;
 	
 	while (true)
 	{
-		int e2 = 2 * err;
+		data.e2 = data.err * 2;
 
-		Framebuffer_SetPixel(handle, x0, y0, argb);
-		if (x0 == x1 && y0 == y1)
+		Framebuffer_SetPixel(handle, data.current.x, data.current.y, argb);
+		if (data.current.x == end->x && data.current.y == end->y)
 		{
 			break;
 		}
 
-		if (e2 >= dy)
+		if (data.e2 >= data.dy)
 		{
-			err += dy;
-			x0 += sx;
+			data.err += data.dy;
+			data.current.x += data.sx;
 		}
-		if (e2 <= dx)
+		if (data.e2 <= data.dx)
 		{
-			err += dx;
-			y0 += sy;
+			data.err += data.dx;
+			data.current.y += data.sy;
 		}
 	}
 }
@@ -103,6 +112,122 @@ void Graphics_DrawFilledPolygon
 			{
 				Framebuffer_SetPixel(handle, x, y, argb);
 			}
+		}
+	}
+}
+
+void Graphics_DrawWall
+(
+	FRAMEBUFFER_HANDLE *	handle,
+	int						aX,
+	int						aY1,
+	int						aY2,
+	int						bX,
+	int						bY1,
+	int						bY2,
+	uint32_t				argb
+)
+{
+	RENDERER_POINT topLeft, topRight, bottomLeft, bottomRight;
+	int x, y;
+	LINE_DATA topLine, bottomLine;
+
+	if (aX < bX)
+	{
+		topLeft.x = bottomLeft.x = aX;
+		topRight.x = bottomRight.x = bX;
+		if (aY1 < aY2)
+		{
+			topLeft.y = aY1;
+			bottomLeft.y = aY2;
+		}
+		else
+		{
+			topLeft.y = aY2;
+			bottomLeft.y = aY1;
+		}
+		if (bY1 < bY2)
+		{
+			topRight.y = bY1;
+			bottomRight.y = bY2;
+		}
+		else
+		{
+			topRight.y = bY2;
+			bottomRight.y = bY1;
+		}
+	}
+	else
+	{
+		topLeft.x = bottomLeft.x = bX;
+		topRight.x = bottomRight.x = aX;
+		if (bY1 < bY2)
+		{
+			topLeft.y = bY1;
+			bottomLeft.y = bY2;
+		}
+		else
+		{
+			topLeft.y = bY2;
+			bottomLeft.y = bY1;
+		}
+		if (aY1 < aY2)
+		{
+			topRight.y = aY1;
+			bottomRight.y = aY2;
+		}
+		else
+		{
+			topRight.y = aY2;
+			bottomRight.y = aY1;
+		}
+	}
+	
+
+	topLine.current = topLeft;
+	topLine.dx = abs(topRight.x - topLeft.x);
+	topLine.sx = topLeft.x < topRight.x ? 1 : -1;
+	topLine.dy = -abs(topRight.y - topLeft.y);
+	topLine.sy = topLeft.y < topRight.y ? 1 : -1;
+	topLine.err = topLine.dx + topLine.dy;
+	bottomLine.current = bottomLeft;
+	bottomLine.dx = abs(bottomRight.x - bottomLeft.x);
+	bottomLine.sx = bottomLeft.x < bottomRight.x ? 1 : -1;
+	bottomLine.dy = -abs(bottomRight.y - bottomLeft.y);
+	bottomLine.sy = bottomLeft.y < bottomRight.y ? 1 : -1;
+	bottomLine.err = bottomLine.dx + bottomLine.dy;
+
+	for (x = topLeft.x; x <= topRight.x; x++)
+	{
+		for (y = topLine.current.y; y <= bottomLine.current.y; y++)
+		{
+			Framebuffer_SetPixel(handle, x, y, argb);
+		}
+
+		topLine.e2 = topLine.err * 2;
+
+		if (topLine.e2 >= topLine.dy)
+		{
+			topLine.err += topLine.dy;
+			topLine.current.x += topLine.sx;
+		}
+		if (topLine.e2 <= topLine.dx)
+		{
+			topLine.err += topLine.dx;
+			topLine.current.y += topLine.sy;
+		}
+
+		bottomLine.e2 = bottomLine.err * 2;
+
+		if (bottomLine.e2 >= bottomLine.dy)
+		{
+			bottomLine.err += bottomLine.dy;
+			bottomLine.current.x += bottomLine.sx;
+		}
+		if (bottomLine.e2 <= bottomLine.dx)
+		{
+			bottomLine.err += bottomLine.dx;
+			bottomLine.current.y += bottomLine.sy;
 		}
 	}
 }

@@ -14,6 +14,7 @@ typedef struct node
 	struct node *	left;
 	struct node *	right;
 	int				id;
+	bool			draw;
 } NODE;
 
 typedef struct map

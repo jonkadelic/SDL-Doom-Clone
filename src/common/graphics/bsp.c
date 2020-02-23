@@ -3,6 +3,10 @@
 
 #include <stddef.h>
 
+// Defines
+#define IN_FRONT	1
+#define BEHIND		-1
+
 // Global variables
 int setIndex = 0;
 
@@ -10,58 +14,66 @@ int setIndex = 0;
 void BSP_TraverseNodes
 (
 	NODE *		node,
-	MAP_WALL *	outputSet,
+	NODE **		outputSet,
 	MAP_POINT *	point
 );
 
-bool BSP_IsPointInFrontOfNode
+int BSP_IsPointInFrontOfNode
 (
 	NODE * 		node,
 	MAP_POINT * point
 );
 
 // Function definitions
-void BSP_GenerateOrderedLineSet
+int BSP_GenerateOrderedLineSet
 (
 	MAP_POINT *	position,
 	NODE *		inputSet,
-	MAP_WALL *	outputSet
+	NODE **		outputSet
 )
 {
 	setIndex = 0;
 
 	BSP_TraverseNodes(inputSet, outputSet, position);
+
+	return setIndex;
 }
 
 void BSP_TraverseNodes
 (
 	NODE *		node,
-	MAP_WALL *	outputSet,
+	NODE **		outputSet,
 	MAP_POINT *	point
 )
 {
+	int pos;
+	
 	if (node == NULL)
 	{
 		return;
 	}
-	else if (node->left == NULL && node->right == NULL)
+	
+	pos = BSP_IsPointInFrontOfNode(node, point);
+	
+	if (node->left == NULL && node->right == NULL)
 	{
-		outputSet[setIndex++] = node->wall;
+		if (pos == IN_FRONT)
+		{
+			outputSet[setIndex++] = node;
+		}
 	}
 	else
 	{
-		int pos = BSP_IsPointInFrontOfNode(node, point);
-
-		if (pos == 1)
+		if (pos == IN_FRONT)
 		{
 			BSP_TraverseNodes(node->left, outputSet, point);
-			outputSet[setIndex++] = node->wall;
+			outputSet[setIndex++] = node;
 			BSP_TraverseNodes(node->right, outputSet, point);
 		}
-		else if (pos == -1)
+		else if (pos == BEHIND)
 		{
 			BSP_TraverseNodes(node->right, outputSet, point);
-			outputSet[setIndex++] = node->wall;
+			outputSet[setIndex++] = node;
 			BSP_TraverseNodes(node->left, outputSet, point);
 		}
 		else
@@ -70,32 +82,36 @@ void BSP_TraverseNodes
 			BSP_TraverseNodes(node->left, outputSet, point);
 		}
 	}
+
+	if (pos == IN_FRONT)
+	{
+		node->draw = true;
+	}
+	else
+	{
+		node->draw = false;
+	}
 }
 
-bool BSP_IsPointInFrontOfNode
+int BSP_IsPointInFrontOfNode
 (
 	NODE * 		node,
 	MAP_POINT * point
 )
 {
-	int x = point->x;
-	int y = point->y;
-	int x1 = node->wall.start.x;
-	int x2 = node->wall.end.x;
-	int y1 = node->wall.start.y;
-	int y2 = node->wall.end.y;
+	int aX = node->wall.start.x, bX = node->wall.end.x, cX = point->x, aY = node->wall.start.y, bY = node->wall.end.y, cY = point->y;
 
-	int out = ((x - x1) * (y2 - y1)) - ((y - y1) * (x2 - x1));
+	int out = ((bX - aX) * (cY - aY) - (bY - aY) * (cX - aX));
 
 	int pos = 0;
 
 	if (out < 0)
 	{
-		pos = 1;
+		pos = BEHIND;
 	}
 	else if (out > 0)
 	{
-		pos = -1;
+		pos = IN_FRONT;
 	}	
 	else
 	{

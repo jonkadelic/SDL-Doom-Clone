@@ -7,7 +7,7 @@
 // Typedefs
 struct point
 {
-	int	x;
+	int x;
 	int	y;
 };
 typedef struct point MAP_POINT;
@@ -18,6 +18,7 @@ typedef struct map_wall
 	MAP_POINT	start;
 	MAP_POINT	end;
 	bool		front;
+	int			height;
 } MAP_WALL;
 
 typedef struct renderer_polygon

@@ -8,8 +8,6 @@
 // Structs
 struct framebuffer_handle
 {
-	unsigned int	width;
-	unsigned int	height;
 	uint32_t *		framebuffer;
 	SDL_Texture *	texture;
 };
@@ -23,8 +21,6 @@ static SDL_Renderer *	renderer = NULL;
 // Function definitions
 MESSAGE Framebuffer_Create
 (
-	const uint32_t			width,
-	const uint32_t			height,
 	FRAMEBUFFER_HANDLE **	out
 )
 {
@@ -38,7 +34,7 @@ MESSAGE Framebuffer_Create
 
 	if (window == NULL)
 	{
-    	window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
+    	window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT, SDL_WINDOW_SHOWN);
 		if (window == NULL)
 		{
 			THROW_ERROR(STATUS_FAILURE, "Could not create SDL window!");
@@ -69,20 +65,17 @@ MESSAGE Framebuffer_Create
 		THROW_ERROR(STATUS_FAILURE, "Could not create framebuffer handle!");
 	}
 
-	(*out)->framebuffer = malloc(width * height * sizeof(uint32_t));
+	(*out)->framebuffer = malloc(FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * sizeof(uint32_t));
 	if ((*out)->framebuffer == NULL)
 	{
 		THROW_ERROR(STATUS_FAILURE, "Could not create framebuffer array!");
 	}
 
-	(*out)->texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+	(*out)->texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, FRAMEBUFFER_WIDTH, FRAMEBUFFER_HEIGHT);
 	if ((*out)->texture == NULL)
 	{
 		THROW_ERROR(STATUS_FAILURE, "Could not create framebuffer texture!");
 	}
-
-	(*out)->width = width;
-	(*out)->height = height;
 
 	RETURN_STATUS_OK;
 }
@@ -103,16 +96,7 @@ void Framebuffer_Blit
 	const FRAMEBUFFER_HANDLE *	handle
 )
 {
-	int winWidth;
-	int winHeight;
-	SDL_GetWindowSize(window, &winWidth, &winHeight);
-
-	if (handle->width != winWidth || handle->height != winHeight)
-	{
-		SDL_SetWindowSize(window, handle->width, handle->height);
-	}
-
-	SDL_UpdateTexture(handle->texture, NULL, handle->framebuffer, handle->width * sizeof(uint32_t));
+	SDL_UpdateTexture(handle->texture, NULL, handle->framebuffer, FRAMEBUFFER_WIDTH * sizeof(uint32_t));
 
 	SDL_RenderClear(renderer);
 	SDL_RenderCopy(renderer, handle->texture, NULL, NULL);
@@ -125,7 +109,7 @@ void Framebuffer_Clear
 	const uint32_t				argb
 )
 {
-	memset(handle->framebuffer, argb, handle->width * handle->height * sizeof(uint32_t));
+	memset(handle->framebuffer, argb, FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * sizeof(uint32_t));
 }
 
 void Framebuffer_SetPixel
@@ -136,12 +120,12 @@ void Framebuffer_SetPixel
 	const uint32_t 				argb
 )
 {
-	if (x < 0 || x >= handle->width || y < 0 || y >= handle->height)
+	if (x < 0 || x >= FRAMEBUFFER_WIDTH || y < 0 || y >= FRAMEBUFFER_HEIGHT)
 	{
 		return;
 	}
 
-	handle->framebuffer[(y * handle->width) + x] = argb;
+	handle->framebuffer[(y * FRAMEBUFFER_WIDTH) + x] = argb;
 }
 
 uint32_t Framebuffer_GetPixel
@@ -151,26 +135,10 @@ uint32_t Framebuffer_GetPixel
 	const unsigned int			y
 )
 {
-	if (x < 0 || x >= handle->width || y < 0 || y >= handle->height)
+	if (x < 0 || x >= FRAMEBUFFER_WIDTH || y < 0 || y >= FRAMEBUFFER_HEIGHT)
 	{
 		return 0;
 	}
 
-	return handle->framebuffer[(y * handle->width) + x];
-}
-
-int Framebuffer_GetWidth
-(
-	const FRAMEBUFFER_HANDLE *	handle
-)
-{
-	return handle->width;
-}
-
-int Framebuffer_GetHeight
-(
-	const FRAMEBUFFER_HANDLE *	handle
-)
-{
-	return handle->height;
+	return handle->framebuffer[(y * FRAMEBUFFER_WIDTH) + x];
 }

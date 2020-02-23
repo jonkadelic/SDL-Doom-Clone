@@ -6,6 +6,10 @@
 #include <game/data.h>
 #include <stdint.h>
 
+// Defines
+#define FRAMEBUFFER_WIDTH	(1280)
+#define FRAMEBUFFER_HEIGHT	(1024)
+
 // Typedefs
 struct framebuffer_handle;
 typedef struct framebuffer_handle FRAMEBUFFER_HANDLE;
@@ -13,8 +17,6 @@ typedef struct framebuffer_handle FRAMEBUFFER_HANDLE;
 // Function declarations
 MESSAGE Framebuffer_Create
 (
-	const uint32_t			width,
-	const uint32_t			height,
 	FRAMEBUFFER_HANDLE **	out
 );
 

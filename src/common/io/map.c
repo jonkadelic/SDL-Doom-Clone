@@ -19,7 +19,7 @@ MESSAGE Map_Load
 
 	int		nodeCount;
 	int		i;
-	int		id, startx, starty, endx, endy, front;
+	int		id, startx, starty, endx, endy, front, height;
 	int		leftid, rightid;
 
 	char	mapName[MAP_NAME_BUFFER_SIZE] = "";
@@ -47,7 +47,7 @@ MESSAGE Map_Load
 
 	for (i = 0; i < nodeCount; i++)
 	{
-		if (fscanf(fp, "%d %d %d %d %d %d\n", &id, &startx, &starty, &endx, &endy, &front) != 6)
+		if (fscanf(fp, "%d %d %d %d %d %d %d\n", &id, &startx, &starty, &endx, &endy, &front, &height) != 7)
 		{
 			THROW_ERROR(STATUS_FAILURE, "Map data is not valid!");
 		}
@@ -59,6 +59,7 @@ MESSAGE Map_Load
 			nodeArray[id].wall.end.x = endx;
 			nodeArray[id].wall.end.y = endy;
 			nodeArray[id].wall.front = (bool)front;
+			nodeArray[id].wall.height = height;
 		}
 	}
 

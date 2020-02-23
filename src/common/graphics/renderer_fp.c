@@ -2,6 +2,7 @@
 #include <graphics/renderer_fp.h>
 
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #include <graphics/graphics.h>
@@ -10,124 +11,266 @@
 #include <graphics/bsp.h>
 
 // Defines
-#define HEIGHT_SCALE	512.0
+#define DIST_SCALE	50000
+
+// Local variables
+static bool drawNode = true;
 
 // Function declarations
-void Graphics_RenderWall
+void renderWall
 (
 	FRAMEBUFFER_HANDLE *	handle,
-	MAP_WALL *				wall
+	NODE *					node
 );
 
-void Graphics_GetPointTopBottom
+DEGREES getColumnAngle
 (
-	FRAMEBUFFER_HANDLE *	handle,
-	MAP_POINT *				point,
-	int *					top,
-	int *					bottom
+	MAP_POINT *	point
 );
 
-void Graphics_GetPointX
+int flattenAngle
 (
-	FRAMEBUFFER_HANDLE *	handle,
-	MAP_POINT *				point,
-	int *					x
+	DEGREES angle
+);
+
+int getColumnHeight
+(
+	MAP_POINT *	point
+);
+
+void fixOverdraw
+(
+	DEGREES	a,
+	DEGREES	b,
+	int *	ax,
+	int *	bx
+);
+
+MAP_POINT getLineIntersect
+(
+	MAP_POINT *	a1,
+	MAP_POINT *	a2,
+	MAP_POINT *	b1,
+	MAP_POINT *	b2
+);
+
+MAP_WALL constrainWallToViewplane
+(
+	MAP_WALL *	wall
 );
 
 // Function definitions
-void Graphics_RenderFirstPerson
+void Renderer_FirstPerson_Render
 (
 	FRAMEBUFFER_HANDLE *	handle,
 	MAP *					map
 )
 {
-	int i;
-	MAP_WALL *	wallSet = malloc(sizeof(MAP_WALL) * map->nodeCount);
+	NODE **	nodeSet = malloc(sizeof(NODE*) * map->nodeCount);
+	int		i;
+	int		setSize;
 
 	// Get ordered list of walls
-	BSP_GenerateOrderedLineSet(&(player.position), map->bspRoot, wallSet);
+	setSize = BSP_GenerateOrderedLineSet(&player.position, map->bspRoot, nodeSet);
 
-	for (i = map->nodeCount - 1; i >= 0; i--)
+	for (i = 0; i < setSize; i++)
 	{
-		Graphics_RenderWall(handle, &(wallSet[i]));
+		renderWall(handle, nodeSet[i]);
 	}
 
-	free(wallSet);
+	free(nodeSet);
 }
 
-void Graphics_RenderWall
+void renderWall
 (
 	FRAMEBUFFER_HANDLE *	handle,
-	MAP_WALL *				wall
+	NODE *					node
 )
 {
-	RENDERER_POINT startTop;
-	RENDERER_POINT startBottom;
-	RENDERER_POINT endTop;
-	RENDERER_POINT endBottom;
-	RENDERER_POLYGON polygon;
+	RENDERER_POINT startTop, startBottom, endTop, endBottom;
+	int tempHeight;
+	RENDERER_POINT fbCentre = { FRAMEBUFFER_WIDTH / 2, FRAMEBUFFER_HEIGHT / 2 };
 	uint32_t argb;
+	DEGREES startAngle;
+	DEGREES endAngle;
 
-	Graphics_GetPointTopBottom(handle, &(wall->start), &(startTop.y), &(startBottom.y));
-	Graphics_GetPointX(handle, &(wall->start), &(startTop.x));
+	startAngle = getColumnAngle(&node->wall.start);
+	endAngle = getColumnAngle(&node->wall.end);
+
+	startTop.x = startBottom.x = flattenAngle(startAngle);
+	endTop.x = endBottom.x = flattenAngle(endAngle);
+	tempHeight = getColumnHeight(&node->wall.start) / 2;
+	startTop.y = fbCentre.y - tempHeight;
+	startBottom.y = fbCentre.y + tempHeight;
+	tempHeight = getColumnHeight(&node->wall.end) / 2;
+	endTop.y = fbCentre.y - tempHeight;
+	endBottom.y = fbCentre.y + tempHeight;
+
+	argb = 0xFF000000 | ((node->wall.start.x & 0xFF) << 16) | ((node->wall.start.y & 0xFF) << 8) | ((node->wall.end.x & 0xFF) << 0);
+
+	if (((startAngle > 90 && endAngle < -90) || (startAngle < -90 && endAngle > 90)) ||
+		((startAngle > 90 && endAngle > 90)  || (startAngle < -90 && endAngle < -90)))
+	{
+		node->draw = false;
+	}
+
+	fixOverdraw(startAngle, endAngle, &startTop.x, &endTop.x);
 	startBottom.x = startTop.x;
-	Graphics_GetPointTopBottom(handle, &(wall->end), &(endTop.y), &(endBottom.y));
-	Graphics_GetPointX(handle, &(wall->end), &(endTop.x));
 	endBottom.x = endTop.x;
 
-	polygon.points = malloc(4 * sizeof(RENDERER_POINT*));
-	polygon.count = 4;
-	polygon.points[0] = startTop;
-	polygon.points[1] = startBottom;
-	polygon.points[2] = endBottom;
-	polygon.points[3] = endTop;
+	if (node->draw == false)
+	{
+		return;
+	}
 
-	argb = 0xFF000000 | ((0x00FFFFFF & wall->start.x) << 16) | ((0x00FFFFFF & wall->start.y) << 8) | ((0x00FFFFFF & wall->end.x));
-
-	Graphics_DrawFilledPolygon(handle, &polygon, argb);
-
-	free(polygon.points);
+	Graphics_DrawWall(handle, startTop.x, startTop.y, startBottom.y, endTop.x, endTop.y, endBottom.y, argb);
 }
 
-void Graphics_GetPointTopBottom
+DEGREES getColumnAngle
 (
-	FRAMEBUFFER_HANDLE *	handle,
-	MAP_POINT *				point,
-	int *					top,
-	int *					bottom
+	MAP_POINT *	point
 )
 {
-	int dx, dy;
-	int dist;
-
-	int fbMidY = Framebuffer_GetHeight(handle) / 2;
-
-	dx = player.position.x - point->x;
-	dy = player.position.y - point->y;
-	dist = (int)sqrt(pow(dx, 2) + pow(dy, 2));
-
-	*bottom = fbMidY + (player.height * (HEIGHT_SCALE/dist));
-	*top = fbMidY - (32 * (HEIGHT_SCALE/dist));
+	return Angle_Atan2(point->y - player.position.y, point->x - player.position.x) + player.angle;
 }
 
-void Graphics_GetPointX
+int flattenAngle
 (
-	FRAMEBUFFER_HANDLE *	handle,
-	MAP_POINT *				point,
-	int *					x
+	DEGREES angle
 )
 {
-	int dx, dy;
-	DEGREES halfFov = player.fov / 2;
-	DEGREES angle;
-	float f;
+	return ((angle + (0.5 * PLAYER_FOV)) / PLAYER_FOV) * FRAMEBUFFER_WIDTH;
+}
 
-	int fbMidX = Framebuffer_GetWidth(handle) / 2;
+int getColumnHeight
+(
+	MAP_POINT *	point
+)
+{
+	MAP_POINT relativePoint = { point->x - player.position.x, point->y - player.position.y };
 
-	dx = point->x - player.position.x;
-	dy = point->y - player.position.y;
-	angle = Angle_Atan2(dy, dx) + player.angle;
+	float distance = sqrtf(powf(relativePoint.x, 2.0f) + powf(relativePoint.y, 2));
 
-	f = angle / halfFov;
-	*x = Framebuffer_GetWidth(handle) * f;
+	return (DIST_SCALE / distance);
+}
+
+void fixOverdraw
+(
+	DEGREES	a,
+	DEGREES	b,
+	int *	ax,
+	int *	bx
+)
+{
+	DEGREES halfFov = PLAYER_FOV / 2;
+	DEGREES quarterFov = PLAYER_FOV / 4;
+
+	if (0 > a && a > -halfFov && -halfFov > b && b > -180)
+	{
+		*bx = 0;
+	}
+	if (0 > a && a > -halfFov && 180 > b && b > halfFov)
+	{
+		if ((180 - b) < -a)
+		{
+			*bx = 0;
+		}
+		else
+		{
+			*bx = FRAMEBUFFER_WIDTH;
+		}
+	}
+	if (halfFov > a && a > 0 && 180 > b && b > halfFov)
+	{
+		*bx = FRAMEBUFFER_WIDTH;
+	}
+	if (halfFov > a && a > 0 && -halfFov > b && b > -180)
+	{
+		if ((180 + b) < a)
+		{
+			*bx = FRAMEBUFFER_WIDTH;
+		}
+		else
+		{
+			*bx = 0;
+		}
+	}
+	if (0 > b && b > -halfFov && -halfFov > a && a > -180)
+	{
+		*ax = 0;
+	}
+	if (0 > b && b > -halfFov && 180 > a && a > halfFov)
+	{
+		if ((180 - a) < -b)
+		{
+			*ax = 0;
+		}
+		else
+		{
+			*ax = FRAMEBUFFER_WIDTH;
+		}
+	}
+	if (halfFov > b && b > 0 && 180 > a && a > halfFov)
+	{
+		*ax = FRAMEBUFFER_WIDTH;
+	}
+	if (halfFov > b && b > 0 && -halfFov > a && a > -180)
+	{
+		if ((180 + a) < b)
+		{
+			*ax = FRAMEBUFFER_WIDTH;
+		}
+		else
+		{
+			*ax = 0;
+		}
+	}
+}
+
+MAP_POINT getLineIntersect
+(
+	MAP_POINT *	a1,
+	MAP_POINT *	a2,
+	MAP_POINT *	b1,
+	MAP_POINT *	b2
+)
+{
+	int x12 = a1->x - a2->x;
+	int x34 = b1->x - b2->x;
+	int y12 = a1->y - a2->y;
+	int y34 = b1->y - b2->y;
+
+	int c = x12 * y34 - y12 * x34;
+
+	int a = a1->x * a2->y - a1->y * a2->x;
+	int b = b1->x * b2->y - b1->y * b2->x;
+
+	int x = (a * x34 - b * x12) / c;
+	int y = (a * y34 - b * y12) / c;
+
+	return (MAP_POINT){ x, y };
+}
+
+MAP_WALL constrainWallToViewplane
+(
+	MAP_WALL *	wall
+)
+{
+	DEGREES halfFov = PLAYER_FOV / 2;
+	MAP_POINT fovRayA, fovRayB;
+	DEGREES startAngle, endAngle;
+	MAP_POINT intersect;
+
+	fovRayA.x = player.position.x + Angle_Cos(player.angle - halfFov);
+	fovRayA.y = player.position.y - Angle_Sin(player.angle - halfFov);
+
+	fovRayB.x = player.position.x + Angle_Cos(player.angle + halfFov);
+	fovRayB.y = player.position.y - Angle_Sin(player.angle + halfFov);
+
+	startAngle = getColumnAngle(&wall->start);
+	endAngle = getColumnAngle(&wall->end);
+
+	intersect = getLineIntersect(&player.position, &fovRayA, &wall->start, &wall->end);
+	return *wall;
+	// Not done
 }

@@ -7,8 +7,8 @@
 #include <game/angle.h>
 
 // Defines
-#define PLAYER_HEIGHT	32
-#define PLAYER_FOV		90.0
+#define PLAYER_HEIGHT	128
+#define PLAYER_FOV		90
 
 // Typedefs
 typedef struct player
@@ -16,7 +16,6 @@ typedef struct player
 	MAP_POINT	position;
 	int			height;
 	DEGREES		angle;
-	DEGREES		fov;
 } PLAYER;
 
 // Global variables
