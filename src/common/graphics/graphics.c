@@ -203,6 +203,8 @@ void Graphics_DrawWall
 		{
 			Framebuffer_SetPixel(handle, x, y, argb);
 		}
+		// Framebuffer_SetPixel(handle, topLine.current.x, topLine.current.y, argb);
+		// Framebuffer_SetPixel(handle, bottomLine.current.x, bottomLine.current.y, argb);
 
 		topLine.e2 = topLine.err * 2;
 

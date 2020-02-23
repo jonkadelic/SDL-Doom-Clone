@@ -11,7 +11,13 @@
 #include <graphics/bsp.h>
 
 // Defines
-#define DIST_SCALE	50000
+#define HEIGHT_SCALE	256
+
+#define vxs(x0,y0, x1,y1)    ((x0)*(y1) - (x1)*(y0))   // vxs: Vector cross product
+#define Intersect(x1,y1, x2,y2, x3,y3, x4,y4) ((MAP_POINT) { \
+    vxs(vxs(x1,y1, x2,y2), (x1)-(x2), vxs(x3,y3, x4,y4), (x3)-(x4)) / vxs((x1)-(x2), (y1)-(y2), (x3)-(x4), (y3)-(y4)), \
+    vxs(vxs(x1,y1, x2,y2), (y1)-(y2), vxs(x3,y3, x4,y4), (y3)-(y4)) / vxs((x1)-(x2), (y1)-(y2), (x3)-(x4), (y3)-(y4)) })
+
 
 // Local variables
 static bool drawNode = true;
@@ -23,40 +29,34 @@ void renderWall
 	NODE *					node
 );
 
-DEGREES getColumnAngle
+void transformWall
 (
-	MAP_POINT *	point
+	MAP_WALL *	wall,
+	MAP_POINT *	offset
 );
 
-int flattenAngle
+void rotateWall
 (
-	DEGREES angle
+	MAP_WALL *	wall,
+	MAP_POINT *	origin,
+	DEGREES		angle
 );
 
-int getColumnHeight
+int dotCross
 (
-	MAP_POINT *	point
+	int x1,
+	int y1,
+	int x2,
+	int y2
 );
 
-void fixOverdraw
+void getViewplaneIntersect
 (
-	DEGREES	a,
-	DEGREES	b,
-	int *	ax,
-	int *	bx
-);
-
-MAP_POINT getLineIntersect
-(
-	MAP_POINT *	a1,
-	MAP_POINT *	a2,
-	MAP_POINT *	b1,
-	MAP_POINT *	b2
-);
-
-MAP_WALL constrainWallToViewplane
-(
-	MAP_WALL *	wall
+	MAP_POINT *	w1,
+	MAP_POINT *	w2,
+	MAP_POINT *	v1,
+	MAP_POINT *	v2,
+	MAP_POINT *	out
 );
 
 // Function definitions
@@ -87,190 +87,85 @@ void renderWall
 	NODE *					node
 )
 {
-	RENDERER_POINT startTop, startBottom, endTop, endBottom;
-	int tempHeight;
-	RENDERER_POINT fbCentre = { FRAMEBUFFER_WIDTH / 2, FRAMEBUFFER_HEIGHT / 2 };
+	RENDERER_POINT center = { FRAMEBUFFER_WIDTH / 2, FRAMEBUFFER_HEIGHT / 2 };
+	MAP_WALL tempWall = node->wall;
+	RENDERER_POINT sTop, sBottom, eTop, eBottom;
 	uint32_t argb;
-	DEGREES startAngle;
-	DEGREES endAngle;
-
-	startAngle = getColumnAngle(&node->wall.start);
-	endAngle = getColumnAngle(&node->wall.end);
-
-	startTop.x = startBottom.x = flattenAngle(startAngle);
-	endTop.x = endBottom.x = flattenAngle(endAngle);
-	tempHeight = getColumnHeight(&node->wall.start) / 2;
-	startTop.y = fbCentre.y - tempHeight;
-	startBottom.y = fbCentre.y + tempHeight;
-	tempHeight = getColumnHeight(&node->wall.end) / 2;
-	endTop.y = fbCentre.y - tempHeight;
-	endBottom.y = fbCentre.y + tempHeight;
-
-	argb = 0xFF000000 | ((node->wall.start.x & 0xFF) << 16) | ((node->wall.start.y & 0xFF) << 8) | ((node->wall.end.x & 0xFF) << 0);
-
-	if (((startAngle > 90 && endAngle < -90) || (startAngle < -90 && endAngle > 90)) ||
-		((startAngle > 90 && endAngle > 90)  || (startAngle < -90 && endAngle < -90)))
-	{
-		node->draw = false;
-	}
-
-	fixOverdraw(startAngle, endAngle, &startTop.x, &endTop.x);
-	startBottom.x = startTop.x;
-	endBottom.x = endTop.x;
 
 	if (node->draw == false)
 	{
 		return;
 	}
 
-	Graphics_DrawWall(handle, startTop.x, startTop.y, startBottom.y, endTop.x, endTop.y, endBottom.y, argb);
+	transformWall(&tempWall, &player.position);
+	rotateWall(&tempWall, &player.position, player.angle);
+
+	if (tempWall.start.x <= 0 && tempWall.end.x <= 0)
+	{
+		return;
+	}
+
+	if (tempWall.start.x <= 0 || tempWall.end.x <= 0)
+	{
+		float nearz = 1e-4f, farz = 5, nearside = 1e-5f, farside = 30.f;
+		// Find an intersection between the wall and the approximate edges of player's view
+		MAP_POINT i1 = Intersect(tempWall.start.y,tempWall.start.x,tempWall.end.y,tempWall.end.x, -nearside,nearz, -farside,farz);
+		MAP_POINT i2 = Intersect(tempWall.start.y,tempWall.start.x,tempWall.end.y,tempWall.end.x,  nearside,nearz,  farside,farz);
+		if(tempWall.start.x < nearz) { if(i1.y > 0) { tempWall.start.y = i1.x; tempWall.start.x = i1.y; } else { tempWall.start.y = i2.x; tempWall.start.x = i2.y; } }
+		if(tempWall.end.x < nearz) { if(i1.y > 0) { tempWall.end.y = i1.x; tempWall.end.x = i1.y; } else { tempWall.end.y = i2.x; tempWall.end.x = i2.y; } }
+	}
+
+	// Divide Y and Z coordinates by the X
+	// Let's just assume for the moment the Z coordinates are 128 and -128
+	if (tempWall.start.x > 0)
+	{
+		sTop.x = sBottom.x = 	center.x + ((tempWall.start.y * PLAYER_FOV) / tempWall.start.x);
+		sTop.y = 				center.y + ((player.height * HEIGHT_SCALE + HEIGHT_SCALE * -node->wall.height) / tempWall.start.x);
+		sBottom.y = 			center.y + ((player.height * HEIGHT_SCALE + HEIGHT_SCALE) / tempWall.start.x);
+	}
+	
+	if (tempWall.end.x > 0)
+	{
+		eTop.x = eBottom.x = 	center.x + ((tempWall.end.y * PLAYER_FOV) / tempWall.end.x);
+		eTop.y = 				center.y + ((player.height * HEIGHT_SCALE + HEIGHT_SCALE * -node->wall.height) / tempWall.end.x);
+		eBottom.y = 			center.y + ((player.height * HEIGHT_SCALE + HEIGHT_SCALE) / tempWall.end.x);
+	}
+
+	argb = 0xFF000000 | ((node->wall.start.x & 0xFF) << 16) | ((node->wall.start.y & 0xFF) << 8) | ((node->wall.end.x & 0xFF) << 0);
+	
+	Graphics_DrawWall(handle, sTop.x, sTop.y, sBottom.y, eTop.x, eTop.y, eBottom.y, argb);
 }
 
-DEGREES getColumnAngle
+void transformWall
 (
-	MAP_POINT *	point
+	MAP_WALL *	wall,
+	MAP_POINT *	offset
 )
 {
-	return Angle_Atan2(point->y - player.position.y, point->x - player.position.x) + player.angle;
+	wall->start.x -= offset->x;
+	wall->start.y -= offset->y;
+	wall->end.x -= offset->x;
+	wall->end.y -= offset->y;
 }
 
-int flattenAngle
+void rotateWall
 (
-	DEGREES angle
+	MAP_WALL *	wall,
+	MAP_POINT *	origin,
+	DEGREES		angle
 )
 {
-	return ((angle + (0.5 * PLAYER_FOV)) / PLAYER_FOV) * FRAMEBUFFER_WIDTH;
-}
+	float s = Angle_Sin(angle);
+	float c = Angle_Cos(angle);
 
-int getColumnHeight
-(
-	MAP_POINT *	point
-)
-{
-	MAP_POINT relativePoint = { point->x - player.position.x, point->y - player.position.y };
+	MAP_POINT p = { wall->start.x, wall->start.y };
 
-	float distance = sqrtf(powf(relativePoint.x, 2.0f) + powf(relativePoint.y, 2));
+	wall->start.x = (p.x * c - p.y * s);
+	wall->start.y = (p.x * s + p.y * c);
 
-	return (DIST_SCALE / distance);
-}
+	p.x = wall->end.x;
+	p.y = wall->end.y;
 
-void fixOverdraw
-(
-	DEGREES	a,
-	DEGREES	b,
-	int *	ax,
-	int *	bx
-)
-{
-	DEGREES halfFov = PLAYER_FOV / 2;
-	DEGREES quarterFov = PLAYER_FOV / 4;
-
-	if (0 > a && a > -halfFov && -halfFov > b && b > -180)
-	{
-		*bx = 0;
-	}
-	if (0 > a && a > -halfFov && 180 > b && b > halfFov)
-	{
-		if ((180 - b) < -a)
-		{
-			*bx = 0;
-		}
-		else
-		{
-			*bx = FRAMEBUFFER_WIDTH;
-		}
-	}
-	if (halfFov > a && a > 0 && 180 > b && b > halfFov)
-	{
-		*bx = FRAMEBUFFER_WIDTH;
-	}
-	if (halfFov > a && a > 0 && -halfFov > b && b > -180)
-	{
-		if ((180 + b) < a)
-		{
-			*bx = FRAMEBUFFER_WIDTH;
-		}
-		else
-		{
-			*bx = 0;
-		}
-	}
-	if (0 > b && b > -halfFov && -halfFov > a && a > -180)
-	{
-		*ax = 0;
-	}
-	if (0 > b && b > -halfFov && 180 > a && a > halfFov)
-	{
-		if ((180 - a) < -b)
-		{
-			*ax = 0;
-		}
-		else
-		{
-			*ax = FRAMEBUFFER_WIDTH;
-		}
-	}
-	if (halfFov > b && b > 0 && 180 > a && a > halfFov)
-	{
-		*ax = FRAMEBUFFER_WIDTH;
-	}
-	if (halfFov > b && b > 0 && -halfFov > a && a > -180)
-	{
-		if ((180 + a) < b)
-		{
-			*ax = FRAMEBUFFER_WIDTH;
-		}
-		else
-		{
-			*ax = 0;
-		}
-	}
-}
-
-MAP_POINT getLineIntersect
-(
-	MAP_POINT *	a1,
-	MAP_POINT *	a2,
-	MAP_POINT *	b1,
-	MAP_POINT *	b2
-)
-{
-	int x12 = a1->x - a2->x;
-	int x34 = b1->x - b2->x;
-	int y12 = a1->y - a2->y;
-	int y34 = b1->y - b2->y;
-
-	int c = x12 * y34 - y12 * x34;
-
-	int a = a1->x * a2->y - a1->y * a2->x;
-	int b = b1->x * b2->y - b1->y * b2->x;
-
-	int x = (a * x34 - b * x12) / c;
-	int y = (a * y34 - b * y12) / c;
-
-	return (MAP_POINT){ x, y };
-}
-
-MAP_WALL constrainWallToViewplane
-(
-	MAP_WALL *	wall
-)
-{
-	DEGREES halfFov = PLAYER_FOV / 2;
-	MAP_POINT fovRayA, fovRayB;
-	DEGREES startAngle, endAngle;
-	MAP_POINT intersect;
-
-	fovRayA.x = player.position.x + Angle_Cos(player.angle - halfFov);
-	fovRayA.y = player.position.y - Angle_Sin(player.angle - halfFov);
-
-	fovRayB.x = player.position.x + Angle_Cos(player.angle + halfFov);
-	fovRayB.y = player.position.y - Angle_Sin(player.angle + halfFov);
-
-	startAngle = getColumnAngle(&wall->start);
-	endAngle = getColumnAngle(&wall->end);
-
-	intersect = getLineIntersect(&player.position, &fovRayA, &wall->start, &wall->end);
-	return *wall;
-	// Not done
+	wall->end.x = (p.x * c - p.y * s);
+	wall->end.y = (p.x * s + p.y * c);
 }

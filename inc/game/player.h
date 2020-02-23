@@ -8,7 +8,7 @@
 
 // Defines
 #define PLAYER_HEIGHT	128
-#define PLAYER_FOV		90
+#define PLAYER_FOV		500
 
 // Typedefs
 typedef struct player
